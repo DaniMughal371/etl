@@ -71,6 +71,27 @@ def connect_postgresql(database):
         log('Please provide valid parameters!','error')
         return None
 
+#Function to get the data from db
+def get_db_data(query,connection):
+    if query and connection:
+        try:
+            key_data = []
+            result = connection.execute(query)
+            log('Query executed using '+str(connection)+' '+str(query),'info')
+
+            #Format Data
+            column_names = [desc[0] for desc in result.cursor.description]
+            for row in result.fetchall():
+                key_data.append(dict(zip(column_names,row)))
+
+            return key_data
+        except Exception as e:
+            log('Error executing query using '+str(connection)+' '+str(query),'error')
+            return None
+    else:
+        log('Invalid parameters to get data!','error')
+        return None
+
 #Function to create logs
 def log(log_message,type):
 
