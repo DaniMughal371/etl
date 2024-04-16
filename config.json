@@ -1,0 +1,20 @@
+{
+    "source_db" : {
+        "db_type" : "source",
+        "db_vendor" : "oracle",
+        "host" : "144.91.68.228",
+        "port" : "1521",
+        "database" : "rproods",
+        "username" : "reportuser",
+        "password" : "report"
+    },
+    "destination_db" : {
+        "db_type" : "destination",
+        "db_vendor" : "postgresql",
+        "host" : "192.168.0.20",
+        "port" : "5432",
+        "database" : "HKBETL",
+        "username" : "postgres",
+        "password" : "root"
+    }
+}
