@@ -2,7 +2,7 @@
     "source_db" : {
         "db_type" : "source",
         "db_vendor" : "oracle",
-        "host" : "144.91.68.228",
+        "host" : "173.249.57.206",
         "port" : "1521",
         "database" : "rproods",
         "username" : "reportuser",

@@ -1,6 +1,6 @@
 #Dependencies
 import json
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from datetime import datetime
 with open('config.json','r') as file:
     config = json.load(file)
@@ -77,7 +77,7 @@ def get_db_data(query,connection):
     if query and connection:
         try:
             key_data = []
-            result = connection.execute(query)
+            result = connection.execute(text(query))
             log('Query executed using '+str(connection)+' '+str(query),'info')
 
             #Format Data
@@ -87,7 +87,7 @@ def get_db_data(query,connection):
 
             return key_data
         except Exception as e:
-            log('Error executing query using '+str(connection)+' '+str(query),'error')
+            log('Error executing query using '+str(connection)+' '+str(query)+':'+str(e),'error')
             return None
     else:
         log('Invalid parameters to get data!','error')
