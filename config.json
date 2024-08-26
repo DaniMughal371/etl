@@ -13,7 +13,7 @@
         "db_vendor" : "postgresql",
         "host" : "192.168.0.20",
         "port" : "5432",
-        "database" : "HKBETL",
+        "database" : "ETL",
         "username" : "postgres",
         "password" : "root"
     }

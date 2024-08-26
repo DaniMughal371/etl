@@ -40,6 +40,7 @@ def connect_oracle(database):
 
 #Function to connect Postgresql
 def connect_postgresql(database):
+    
     username = database['username'] if 'username' in database else None
     password = database['password'] if 'password' in database else None
     host = database['host'] if 'host' in database else None
