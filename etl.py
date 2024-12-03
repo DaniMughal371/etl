@@ -1,30 +1,43 @@
 #Dependencies
 import json
-from helpers import connect_oracle, connect_postgresql, log, get_db_data
+from helpers import connect_oracle, connect_postgresql, log, get_db_data, destination_schema
+import pandas as pd
 with open('config.json','r') as config_file:
     config = json.load(config_file)
 
-#Function for extraction of data
-def extract():
-    
-    #validate source db
-    if config and config['source_db']:
-        if config['source_db']['db_vendor']: 
-        
-            #connect source db
-            source_connection = connect_oracle(config['source_db'])
-            if source_connection:
-                data = get_db_data('select * from rps.invn_sbs_item fetch first 10 rows only',source_connection)
-                print(data)
-            else:
-                return None
+log('New ETL process started!','process')
 
-        else:
-            log('Source DB vendor not provided!','error')
-            return None
+#Function for extraction of data
+import pandas as pd
+
+extracted_data = {}
+
+#Function to extract data
+def extract():
+
+    # Connect to source database
+    source_connection = connect_oracle(config['source_db'])
+    if source_connection:
+        for table in [config['extract']['tables'][0]]:
+            log('Extracting data for ' + table['table_name'],'info')
+            data = get_db_data(str(table['query']+' fetch first 10 rows only'),source_connection)
+
+            if len(data):
+                extracted_data[table['table_name']] = pd.DataFrame(data)
+            else:
+                extracted_data[table['table_name']] = []
+
+            print(pd.DataFrame(data).head())
+
+        #Close the connection
+        source_connection.close()
+
     else:
-        log('Source DB not found or invalid!','error')
+        #Close the connection
+        if source_connection:
+            source_connection.close()
         return None
+
 
 #Function for transforming data
 def transform():
@@ -32,7 +45,11 @@ def transform():
 
 #Function for loading data
 def load():
-    pass
+    
+    #Verify destination schema for loading
+    dest_check = destination_schema(config['destination_db'])
+    if dest_check:
+        pass
 
 
 extract()
