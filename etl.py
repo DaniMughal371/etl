@@ -17,17 +17,24 @@ def extract():
 
     # Connect to source database
     source_connection = connect_oracle(config['source_db'])
+
     if source_connection:
-        for table in [config['extract']['tables'][0]]:
-            log('Extracting data for ' + table['table_name'],'info')
-            data = get_db_data(str(table['query']+' fetch first 10 rows only'),source_connection)
+        for table in config['extract']['tables']:
+            
+            try:
+                log('Extracting data for ' + table['table_name'],'info')
+                data = get_db_data(str(table['query']+' fetch first 10 rows only'),source_connection)
 
-            if len(data):
-                extracted_data[table['table_name']] = pd.DataFrame(data)
-            else:
-                extracted_data[table['table_name']] = []
+                if len(data):
+                    df = pd.DataFrame(data)
+                    extracted_data[table['table_name']] = df
+                    log('Extracted '+ table['table_name'] + ' row count: ' + str(df.shape[0]),'info')
+                else:
+                    extracted_data[table['table_name']] = []
+                    log('No data found for '+ table['table_name'],'info')
 
-            print(pd.DataFrame(data).head())
+            except Exception as e:
+                log('Error extracting data for '+ table['table_name'] + str(e),'error')
 
         #Close the connection
         source_connection.close()
@@ -36,7 +43,6 @@ def extract():
         #Close the connection
         if source_connection:
             source_connection.close()
-        return None
 
 
 #Function for transforming data
@@ -53,3 +59,4 @@ def load():
 
 
 extract()
+print(extracted_data)
