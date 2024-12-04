@@ -83,10 +83,6 @@
                 "query" : "SELECT TO_CHAR(SID) AS SID,TO_CHAR(SBS_SID) AS SBS_SID,VEND_ID,VEND_CODE,ACTIVE,VEND_NAME,INFO1,INFO2,NVL(TRADE_DISC_PERC,0) AS TRADE_DISC_PERC FROM RPS.VENDOR"
             },
             {
-                "table_name" : "company",
-                "query" : "SELECT TO_CHAR(S.SID) AS SID,SBS_NO,SBS_NAME FROM RPS.SUBSIDIARY S"
-            },
-            {
                 "table_name" : "store",
                 "query" : "select to_char(s.sbs_sid) as sbs_Sid,to_char(s.sid) as sid,to_char(s.active_price_lvl_sid) as price_lvl_sid, s.store_no,s.store_code,s.store_name,active,activation_date,s.address1,s.address2,s.address3,s.address4,s.address5,s.address6,s.zip,s.phone1,s.phone2, s.udf1_string,s.udf2_string,s.udf3_string,s.udf4_string,s.udf5_string from rps.store s"
             },

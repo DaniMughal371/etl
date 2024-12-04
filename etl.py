@@ -58,5 +58,5 @@ def load():
         pass
 
 
-extract()
-print(extracted_data)
+# extract()
+load()
