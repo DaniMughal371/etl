@@ -1,6 +1,6 @@
 #Dependencies
 import json
-from helpers import connect_oracle, connect_postgresql, log, get_db_data, destination_schema
+from helpers import connect_oracle, log, get_db_data, destination_schema
 import pandas as pd
 with open('config.json','r') as config_file:
     config = json.load(config_file)
@@ -44,7 +44,6 @@ def extract():
         if source_connection:
             source_connection.close()
 
-
 #Function for transforming data
 def transform():
     pass
@@ -56,7 +55,6 @@ def load():
     dest_check = destination_schema(config['destination_db'])
     if dest_check:
         pass
-
 
 # extract()
 load()
