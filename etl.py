@@ -23,7 +23,7 @@ def extract():
             
             try:
                 log('Extracting data for ' + table['table_name'],'info')
-                data = get_db_data(str(table['query']+' fetch first 10 rows only'),source_connection)
+                data = get_db_data(str(table['query']),source_connection)
 
                 if len(data):
                     df = pd.DataFrame(data)
@@ -56,5 +56,5 @@ def load():
     if dest_check:
         pass
 
-# extract()
+extract()
 load()
