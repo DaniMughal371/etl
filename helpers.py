@@ -629,9 +629,3 @@ def destination_schema(database):
 
 
         return False
-
-    
-
-    
-    
-
