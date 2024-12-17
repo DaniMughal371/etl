@@ -15,6 +15,8 @@ extracted_data = {}
 #Function to extract data
 def extract():
 
+    log('Extract started!','info')
+
     # Connect to source database
     source_connection = connect_oracle(config['source_db'])
 
@@ -22,8 +24,11 @@ def extract():
         for table in config['extract']['tables']:
             
             try:
-                log('Extracting data for ' + table['table_name'],'info')
-                data = get_db_data(str(table['query']),source_connection)
+                # log('Extracting data for ' + table['table_name'],'info')
+                data = get_db_data(
+                    str(table['query'])
+                    # +' FETCH FIRST 10 ROWS ONLY'
+                    ,source_connection)
 
                 if len(data):
                     df = pd.DataFrame(data)
@@ -50,11 +55,37 @@ def transform():
 
 #Function for loading data
 def load():
+
+    log('Load started!','info')
     
     #Verify destination schema for loading
-    dest_check = destination_schema(config['destination_db'])
-    if dest_check:
-        pass
+    dest_engine = destination_schema(config['destination_db'])
+
+    if dest_engine:
+        for table in config['extract']['tables']:
+
+            # Check if table has data
+            if len(extracted_data[table['table_name']]) > 0:
+
+                log('Loading data for '+str(table['table_name']),'info')
+
+                # Update headers of table to lower case
+                extracted_data[table['table_name']].columns = extracted_data[table['table_name']].columns.str.lower()
+
+                
+                try:
+                    # Load table
+                    extracted_data[table['table_name']].to_sql(name=table['table_name'], con=dest_engine,if_exists='append',index=False)
+
+                except Exception as e:
+
+                    log('Error loading data for ' + str(table['table_name']) + str(e),'error')
+
+            else:
+
+                log('No data found data for '+str(table['table_name']),'info')
+
+    log('Loading Completed!','info')
 
 extract()
 load()
