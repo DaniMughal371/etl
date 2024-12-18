@@ -27,16 +27,16 @@ def connect_oracle(database):
                 pool_pre_ping=True  # Ensure connection is alive
             )
             connection = engine.connect()
-            log('Connected to '+db_type+' DB using '+username+':'+password+'@'+host+':'+port+'/'+db_name,'info')
+            log('Connected to '+db_type+' DB using '+username+':'+password+'@'+host+':'+port+'/'+db_name,'Info')
             return connection
     
         except Exception as e:
             
-            log('Unable to connect to '+db_type+' DB using '+username+':'+password+'@'+host+':'+port+'/'+db_name+'\t'+ str(e),'error')
+            log('Unable to connect to '+db_type+' DB using '+username+':'+password+'@'+host+':'+port+'/'+db_name+'\t'+ str(e),'Error')
             return None
     else:
 
-        log('Please provide valid parameters!','error')
+        log('Please provide valid parameters!','Error')
         return None
 
 #Function to connect Postgresql
@@ -66,17 +66,17 @@ def connect_postgresql(database,return_engine=False,init_db=False):
                 return engine_con
             else:
                 connection = engine_con.connect()
-                log('Connected to '+db_type+' DB using '+username+':'+password+'@'+host+':'+port+'/'+db_name,'info')
+                log('Connected to '+db_type+' DB using '+username+':'+password+'@'+host+':'+port+'/'+db_name,'Info')
                 return connection
     
         except Exception as e:
             
-            log('Unable to connect to '+db_type+' DB using '+username+':'+password+'@'+host+':'+port+'/'+db_name+'\t'+ str(e),'error')
+            log('Unable to connect to '+db_type+' DB using '+username+':'+password+'@'+host+':'+port+'/'+db_name+'\t'+ str(e),'Error')
             return None
 
     else:
 
-        log('Please provide valid parameters!','error')
+        log('Please provide valid parameters!','Error')
         return None
 
 #Function to get the data from db
@@ -85,7 +85,7 @@ def get_db_data(query,connection):
         try:
             key_data = []
             result = connection.execute(text(query))
-            # log('Query executed using '+str(connection)+' '+str(query),'info')
+            # log('Query executed using '+str(connection)+' '+str(query),'Info')
 
             #Format Data
             column_names = [desc[0] for desc in result.cursor.description]
@@ -94,10 +94,10 @@ def get_db_data(query,connection):
 
             return key_data if len(key_data) > 0 else []
         except Exception as e:
-            log('Error executing query using '+str(connection)+' '+str(query)+':'+str(e),'error')
+            log('Error executing query using '+str(connection)+' '+str(query)+':'+str(e),'Error')
             return []
     else:
-        log('Invalid parameters to get data!','error')
+        log('Invalid parameters to get data!','Error')
         return None
 
 #Function to create logs
@@ -123,11 +123,11 @@ def destination_schema(database):
             check_db_query = f"SELECT 1 as found FROM pg_database WHERE datname = '{database['database']}';"
             result = get_db_data(check_db_query,connection)
             if result is None or len(result) == 0:
-                log(f"Destination database {database['database']} does not exist. Creating it now.",'info')
+                log(f"Destination database {database['database']} does not exist. Creating it now.",'Info')
                 create_db_query = f"CREATE DATABASE {database['database']};"
                 connection.execute(text(create_db_query))
             else: 
-                log(f"Destination database {database['database']} exist. Moving forward.",'info')
+                log(f"Destination database {database['database']} exist. Moving forward.",'Info')
 
             #Create destination db connection
             engine = connect_postgresql(database,True,False)
@@ -233,7 +233,7 @@ def destination_schema(database):
                 Column('sbs_sid', String),
                 Column('sid', String),
                 Column('created_datetime', DateTime),
-                Column('cust_id', Integer),
+                Column('cust_id', BIGINT),
                 Column('first_name', String),
                 Column('last_name', String),
                 Column('gender', String),
@@ -256,8 +256,8 @@ def destination_schema(database):
                 Column('udf16_string', String),
                 Column('udf17_string', String),
                 Column('udf18_string', String),
-                Column('info1', String),
-                Column('info2', String),
+                Column('Info1', String),
+                Column('Info2', String),
                 Column('share_type', Integer),
                 Column('active', Integer)
             )
@@ -479,8 +479,8 @@ def destination_schema(database):
                 Column('vend_code', String),
                 Column('active', Integer),
                 Column('vend_name', String),
-                Column('info1', String),
-                Column('info2', String),
+                Column('Info1', String),
+                Column('Info2', String),
                 Column('trade_disc_perc', Float)
             )
 
@@ -608,7 +608,7 @@ def destination_schema(database):
             #Check Tables
             tables = metadata.create_all(engine)
 
-            log(f"Destination database verified!",'info')
+            log(f"Destination database verified!",'Info')
 
             #Close Connection
             connection.close()
@@ -617,11 +617,11 @@ def destination_schema(database):
         
         else:
 
-            log(f"Destination database not verified!",'error')   
+            log(f"Destination database not verified!",'Error')   
             return False        
     
     except Exception as e:
-        log(f"Error verifying destination schema : "+str(e),'error')
+        log(f"Error verifying destination schema : "+str(e),'Error')
 
         #Close Connection
         if connection:

@@ -15,7 +15,7 @@ extracted_data = {}
 #Function to extract data
 def extract():
 
-    log('Extract started!','info')
+    log('Extract started!','Info')
 
     # Connect to source database
     source_connection = connect_oracle(config['source_db'])
@@ -24,7 +24,7 @@ def extract():
         for table in config['extract']['tables']:
             
             try:
-                # log('Extracting data for ' + table['table_name'],'info')
+                # log('Extracting data for ' + table['table_name'],'Info')
                 data = get_db_data(
                     str(table['query'])
                     # +' FETCH FIRST 10 ROWS ONLY'
@@ -33,13 +33,13 @@ def extract():
                 if len(data):
                     df = pd.DataFrame(data)
                     extracted_data[table['table_name']] = df
-                    log('Extracted '+ table['table_name'] + ' row count: ' + str(df.shape[0]),'info')
+                    log('Extracted '+ table['table_name'] + ' row count: ' + str(df.shape[0]),'Info')
                 else:
                     extracted_data[table['table_name']] = []
-                    log('No data found for '+ table['table_name'],'info')
+                    log('No data found for '+ table['table_name'],'Info')
 
             except Exception as e:
-                log('Error extracting data for '+ table['table_name'] + str(e),'error')
+                log('Error extracting data for '+ table['table_name'] + str(e),'Error')
 
         #Close the connection
         source_connection.close()
@@ -56,7 +56,7 @@ def transform():
 #Function for loading data
 def load():
 
-    log('Load started!','info')
+    log('Load started!','Info')
     
     #Verify destination schema for loading
     dest_engine = destination_schema(config['destination_db'])
@@ -67,11 +67,10 @@ def load():
             # Check if table has data
             if len(extracted_data[table['table_name']]) > 0:
 
-                log('Loading data for '+str(table['table_name']),'info')
+                log('Loading data for '+str(table['table_name']),'Info')
 
                 # Update headers of table to lower case
                 extracted_data[table['table_name']].columns = extracted_data[table['table_name']].columns.str.lower()
-
                 
                 try:
                     # Load table
@@ -79,13 +78,14 @@ def load():
 
                 except Exception as e:
 
-                    log('Error loading data for ' + str(table['table_name']) + str(e),'error')
+                    log('Error loading data for ' + str(table['table_name']) + str(e),'Error')
 
             else:
 
-                log('No data found data for '+str(table['table_name']),'info')
+                log('No data found data for '+str(table['table_name']),'Info')
 
-    log('Loading Completed!','info')
+    log('Loading Completed!','Info')
 
 extract()
+transform()
 load()

@@ -107,5 +107,11 @@
                 "query" : "SELECT TO_CHAR(PI.PO_SID) AS PO_SID,TO_CHAR(PI.ITEM_SID) AS ITEM_SID, PI.ITEM_POS,PI.CREATED_DATETIME,PI.PRICE,PI.COST,PI.FC_COST,PI.TAX_PERC,PI.TAX_PERC2,PI.ORD_QTY FROM RPS.PO_ITEM PI"
             }
         ]
+    },
+    "load" : {
+        "incremental" : [
+            "invoice",
+            "invoice_items"
+        ]
     }
 }
