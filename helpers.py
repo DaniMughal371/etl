@@ -27,12 +27,12 @@ def connect_oracle(database):
                 pool_pre_ping=True  # Ensure connection is alive
             )
             connection = engine.connect()
-            log('Connected to '+db_type+' DB using '+username+':'+password+'@'+host+':'+port+'/'+db_name,'Info')
+            log('Connected to '+db_type+' DB using '+username+'@'+host+':'+port+'/'+db_name,'Info')
             return connection
     
         except Exception as e:
             
-            log('Unable to connect to '+db_type+' DB using '+username+':'+password+'@'+host+':'+port+'/'+db_name+'\t'+ str(e),'Error')
+            log('Unable to connect to '+db_type+' DB using '+username+'@'+host+':'+port+'/'+db_name+'\t'+ str(e),'Error')
             return None
     else:
 
@@ -66,12 +66,12 @@ def connect_postgresql(database,return_engine=False,init_db=False):
                 return engine_con
             else:
                 connection = engine_con.connect()
-                log('Connected to '+db_type+' DB using '+username+':'+password+'@'+host+':'+port+'/'+db_name,'Info')
+                log('Connected to '+db_type+' DB using '+username+'@'+host+':'+port+'/'+db_name,'Info')
                 return connection
     
         except Exception as e:
             
-            log('Unable to connect to '+db_type+' DB using '+username+':'+password+'@'+host+':'+port+'/'+db_name+'\t'+ str(e),'Error')
+            log('Unable to connect to '+db_type+' DB using '+username+'@'+host+':'+port+'/'+db_name+'\t'+ str(e),'Error')
             return None
 
     else:

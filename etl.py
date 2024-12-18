@@ -5,7 +5,7 @@ import pandas as pd
 with open('config.json','r') as config_file:
     config = json.load(config_file)
 
-log('New ETL process started!','process')
+log('New ETL process started!','Process')
 
 #Function for extraction of data
 import pandas as pd
