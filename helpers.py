@@ -138,7 +138,7 @@ def destination_schema(database):
             invoice = Table(
                 'invoice',
                 metadata,
-                Column('id', Integer, primary_key=True, autoincrement=True),
+                # Column('id', Integer, primary_key=True, autoincrement=True),
                 Column('sid', String),
                 Column('bt_cuid', String),
                 Column('store_sid', String),
@@ -173,7 +173,7 @@ def destination_schema(database):
             inventory = Table(
                 'inventory',
                 metadata,
-                Column('id', Integer, primary_key=True, autoincrement=True),
+                # Column('id', Integer, primary_key=True, autoincrement=True),
                 Column('sid', String),
                 Column('sbs_sid', String),
                 Column('dcs_sid', String),
@@ -229,7 +229,7 @@ def destination_schema(database):
             customer = Table(
                 'customer',
                 metadata,
-                Column('id', Integer, primary_key=True, autoincrement=True),
+                # Column('id', Integer, primary_key=True, autoincrement=True),
                 Column('sbs_sid', String),
                 Column('sid', String),
                 Column('created_datetime', DateTime),
@@ -256,8 +256,8 @@ def destination_schema(database):
                 Column('udf16_string', String),
                 Column('udf17_string', String),
                 Column('udf18_string', String),
-                Column('Info1', String),
-                Column('Info2', String),
+                Column('info1', String),
+                Column('info2', String),
                 Column('share_type', Integer),
                 Column('active', Integer)
             )
@@ -265,7 +265,7 @@ def destination_schema(database):
             customer_phone = Table(
                 'customer_phone',
                 metadata,
-                Column('id', Integer, primary_key=True, autoincrement=True),
+                # Column('id', Integer, primary_key=True, autoincrement=True),
                 Column('cust_sid', String),
                 Column('primary_flag', Integer),
                 Column('seq_no', Integer),
@@ -278,7 +278,7 @@ def destination_schema(database):
             customer_address = Table(
                 'customer_address',
                 metadata,
-                Column('id', Integer, primary_key=True, autoincrement=True),
+                # Column('id', Integer, primary_key=True, autoincrement=True),
                 Column('cust_sid', String),
                 Column('address_name', String),
                 Column('address_1', String),
@@ -300,7 +300,7 @@ def destination_schema(database):
             customer_email = Table(
                 'customer_email',
                 metadata,
-                Column('id', Integer, primary_key=True, autoincrement=True),
+                # Column('id', Integer, primary_key=True, autoincrement=True),
                 Column('cust_sid', String),
                 Column('seq_no', Integer),
                 Column('email_address', String),
@@ -312,7 +312,7 @@ def destination_schema(database):
             dcs = Table(
                 'dcs',
                 metadata,
-                Column('id', Integer, primary_key=True, autoincrement=True),
+                # Column('id', Integer, primary_key=True, autoincrement=True),
                 Column('sid', String),
                 Column('sbs_sid', String),
                 Column('dcs_code', String),
@@ -325,7 +325,7 @@ def destination_schema(database):
             inventory_qty = Table(
                 'inventory_qty',
                 metadata,
-                Column('id', Integer, primary_key=True, autoincrement=True),
+                # Column('id', Integer, primary_key=True, autoincrement=True),
                 Column('sbs_sid', String),
                 Column('item_sid', String),
                 Column('store_sid', String),
@@ -335,7 +335,7 @@ def destination_schema(database):
             inventory_price = Table(
                 'inventory_price',
                 metadata,
-                Column('id', Integer, primary_key=True, autoincrement=True),
+                # Column('id', Integer, primary_key=True, autoincrement=True),
                 Column('sbs_sid', String),
                 Column('item_sid', String),
                 Column('price_lvl_sid', String),
@@ -345,7 +345,7 @@ def destination_schema(database):
             invoice_items = Table(
                 'invoice_items',
                 metadata,
-                Column('id', Integer, primary_key=True, autoincrement=True),
+                # Column('id', Integer, primary_key=True, autoincrement=True),
                 Column('invc_post_date', DateTime),
                 Column('sbs_sid', String),
                 Column('doc_sid', String),
@@ -373,7 +373,7 @@ def destination_schema(database):
             voucher = Table(
                 'voucher',
                 metadata,
-                Column('id', Integer, primary_key=True, autoincrement=True),
+                # Column('id', Integer, primary_key=True, autoincrement=True),
                 Column('sid', String),
                 Column('sbs_sid', String),
                 Column('store_sid', String),
@@ -391,7 +391,7 @@ def destination_schema(database):
             voucher_items = Table(
                 'voucher_items',
                 metadata,
-                Column('id', Integer, primary_key=True, autoincrement=True),
+                # Column('id', Integer, primary_key=True, autoincrement=True),
                 Column('vou_sid', String),
                 Column('item_sid', String),
                 Column('item_pos', Integer),
@@ -417,7 +417,7 @@ def destination_schema(database):
             slip = Table(
                 'slip',
                 metadata,
-                Column('id', Integer, primary_key=True, autoincrement=True),
+                # Column('id', Integer, primary_key=True, autoincrement=True),
                 Column('slip_sid', String),
                 Column('post_date', DateTime),
                 Column('out_sbs_sid', String),
@@ -441,7 +441,7 @@ def destination_schema(database):
             slip_items = Table(
                 'slip_items',
                 metadata,
-                Column('id', Integer, primary_key=True, autoincrement=True),
+                # Column('id', Integer, primary_key=True, autoincrement=True),
                 Column('slip_sid', String),
                 Column('item_sid', String),
                 Column('qty', Float),
@@ -463,7 +463,7 @@ def destination_schema(database):
             company = Table(
                 'company',
                 metadata,
-                Column('id', Integer, primary_key=True, autoincrement=True),
+                # Column('id', Integer, primary_key=True, autoincrement=True),
                 Column('sid', String),
                 Column('sbs_no', Integer),
                 Column('sbs_name', String)
@@ -472,22 +472,22 @@ def destination_schema(database):
             vendor = Table(
                 'vendor',
                 metadata,
-                Column('id', Integer, primary_key=True, autoincrement=True),
+                # Column('id', Integer, primary_key=True, autoincrement=True),
                 Column('sid', String),
                 Column('sbs_sid', String),
                 Column('vend_id', Integer),
                 Column('vend_code', String),
                 Column('active', Integer),
                 Column('vend_name', String),
-                Column('Info1', String),
-                Column('Info2', String),
+                Column('info1', String),
+                Column('info2', String),
                 Column('trade_disc_perc', Float)
             )
 
             store = Table(
                 'store',
                 metadata,
-                Column('id', Integer, primary_key=True, autoincrement=True),
+                # Column('id', Integer, primary_key=True, autoincrement=True),
                 Column('sbs_sid', String),
                 Column('sid', String),
                 Column('price_lvl_sid', String),
@@ -515,7 +515,7 @@ def destination_schema(database):
             price_level = Table(
                 'price_level',
                 metadata,
-                Column('id', Integer, primary_key=True, autoincrement=True),
+                # Column('id', Integer, primary_key=True, autoincrement=True),
                 Column('sbs_sid', String),
                 Column('sid', String),
                 Column('price_lvl', Integer),
@@ -526,7 +526,7 @@ def destination_schema(database):
             asn = Table(
                 'asn',
                 metadata,
-                Column('id', Integer, primary_key=True, autoincrement=True),
+                # Column('id', Integer, primary_key=True, autoincrement=True),
                 Column('sid', String),
                 Column('sbs_sid', String),
                 Column('store_sid', String),
@@ -544,7 +544,7 @@ def destination_schema(database):
             asn_items = Table(
                 'asn_items',
                 metadata,
-                Column('id', Integer, primary_key=True, autoincrement=True),
+                # Column('id', Integer, primary_key=True, autoincrement=True),
                 Column('vou_sid', String),
                 Column('item_sid', String),
                 Column('item_pos', Integer),
@@ -568,7 +568,7 @@ def destination_schema(database):
             po = Table(
                 'po',
                 metadata,
-                Column('id', Integer, primary_key=True, autoincrement=True),
+                # Column('id', Integer, primary_key=True, autoincrement=True),
                 Column('sbs_sid', String),
                 Column('store_sid', String),
                 Column('sid', String),
@@ -592,7 +592,7 @@ def destination_schema(database):
             po_items = Table(
                 'po_items',
                 metadata,
-                Column('id', Integer, primary_key=True, autoincrement=True),
+                # Column('id', Integer, primary_key=True, autoincrement=True),
                 Column('po_sid', String),
                 Column('item_sid', String),
                 Column('item_pos', Integer),
