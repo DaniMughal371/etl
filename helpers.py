@@ -1,11 +1,11 @@
-#Dependencies
+# Dependencies
 from sqlalchemy import create_engine, text, Table, Column, Integer, String, Float, MetaData, DateTime, BIGINT
 from datetime import datetime
 from sqlalchemy.pool import NullPool
 
-#Function to connect Oracle
-def connect_oracle(database):
 
+# Function to connect Oracle
+def connect_oracle(database):
     username = database['username'] if 'username' in database else None
     password = database['password'] if 'password' in database else None
     host = database['host'] if 'host' in database else None
@@ -15,33 +15,34 @@ def connect_oracle(database):
 
     if username and password and host and port and db_name and db_type:
 
-        #connection string
-        con_str = 'oracle+cx_oracle://'+ username+':'+password+'@'+host+':'+port+'/'+db_name
+        # connection string
+        con_str = 'oracle+cx_oracle://' + username + ':' + password + '@' + host + ':' + port + '/' + db_name
 
         try:
 
-            #Create Connection
+            # Create Connection
             engine = create_engine(
                 con_str,
-                poolclass=NullPool, # Reconnect for each query
+                poolclass=NullPool,  # Reconnect for each query
                 pool_pre_ping=True  # Ensure connection is alive
             )
             connection = engine.connect()
-            log('Connected to '+db_type+' DB using '+username+'@'+host+':'+port+'/'+db_name,'Info')
+            log('Connected to ' + db_type + ' DB using ' + username + '@' + host + ':' + port + '/' + db_name, 'Info')
             return connection
-    
+
         except Exception as e:
-            
-            log('Unable to connect to '+db_type+' DB using '+username+'@'+host+':'+port+'/'+db_name+'\t'+ str(e),'Error')
+
+            log('Unable to connect to ' + db_type + ' DB using ' + username + '@' + host + ':' + port + '/' + db_name + '\t' + str(
+                e), 'Error')
             return None
     else:
 
-        log('Please provide valid parameters!','Error')
+        log('Please provide valid parameters!', 'Error')
         return None
 
-#Function to connect Postgresql
-def connect_postgresql(database,return_engine=False,init_db=False):
-    
+
+# Function to connect Postgresql
+def connect_postgresql(database, return_engine=False, init_db=False):
     username = database['username'] if 'username' in database else None
     password = database['password'] if 'password' in database else None
     host = database['host'] if 'host' in database else None
@@ -54,87 +55,174 @@ def connect_postgresql(database,return_engine=False,init_db=False):
 
     if username and password and host and port and db_name and db_type:
 
-        #connection string
-        con_str = 'postgresql://'+ username+':'+password+'@'+host+':'+port+'/'+db_name
+        # connection string
+        con_str = 'postgresql://' + username + ':' + password + '@' + host + ':' + port + '/' + db_name
 
         try:
 
-            #Create Connection
-            engine_con = create_engine(con_str,isolation_level= "AUTOCOMMIT" if init_db else None) 
-            
+            # Create Connection
+            engine_con = create_engine(con_str, isolation_level="AUTOCOMMIT" if init_db else None)
+
             if return_engine:
                 return engine_con
             else:
                 connection = engine_con.connect()
-                log('Connected to '+db_type+' DB using '+username+'@'+host+':'+port+'/'+db_name,'Info')
+                log('Connected to ' + db_type + ' DB using ' + username + '@' + host + ':' + port + '/' + db_name,
+                    'Info')
                 return connection
-    
+
         except Exception as e:
-            
-            log('Unable to connect to '+db_type+' DB using '+username+'@'+host+':'+port+'/'+db_name+'\t'+ str(e),'Error')
+
+            log('Unable to connect to ' + db_type + ' DB using ' + username + '@' + host + ':' + port + '/' + db_name + '\t' + str(
+                e), 'Error')
             return None
 
     else:
 
-        log('Please provide valid parameters!','Error')
+        log('Please provide valid parameters!', 'Error')
         return None
 
-#Function to get the data from db
-def get_db_data(query,connection):
+
+# Function to connect Postgresql
+def connect_sqlserver(database, return_engine=False, init_db=False):
+    username = database['username'] if 'username' in database else None
+    password = database['password'] if 'password' in database else None
+    host = database['host'] if 'host' in database else None
+    port = database['port'] if 'port' in database else None
+    if init_db:
+        db_name = 'master'
+    else:
+        db_name = database['database'] if 'database' in database else None
+    db_type = database['db_type'] if 'db_type' in database else None
+
+    if username and password and host and port and db_name and db_type:
+
+        # connection string
+        con_str = 'mssql+pymssql://' + username + ':' + password + '@' + host + ':' + port + '/' + db_name
+        print(con_str)
+
+        try:
+
+            # Create Connection
+            engine_con = create_engine(con_str, isolation_level="AUTOCOMMIT" if init_db else None)
+
+            if return_engine:
+                return engine_con
+            else:
+                connection = engine_con.connect()
+                log('Connected to ' + db_type + ' DB using ' + username + '@' + host + ':' + port + '/' + db_name,
+                    'Info')
+                return connection
+
+        except Exception as e:
+
+            log('Unable to connect to ' + db_type + ' DB using ' + username + '@' + host + ':' + port + '/' + db_name + '\t' + str(
+                e), 'Error')
+            return None
+
+    else:
+
+        log('Please provide valid parameters!', 'Error')
+        return None
+
+
+# Function to get the data from db
+def get_db_data(query, connection):
     if query and connection:
         try:
             key_data = []
             result = connection.execute(text(query))
             # log('Query executed using '+str(connection)+' '+str(query),'Info')
 
-            #Format Data
+            # Format Data
             column_names = [desc[0] for desc in result.cursor.description]
             for row in result.fetchall():
-                key_data.append(dict(zip(column_names,row)))
+                key_data.append(dict(zip(column_names, row)))
 
             return key_data if len(key_data) > 0 else []
         except Exception as e:
-            log('Error executing query using '+str(connection)+' '+str(query)+':'+str(e),'Error')
+            log('Error executing query using ' + str(connection) + ' ' + str(query) + ':' + str(e), 'Error')
             return []
     else:
-        log('Invalid parameters to get data!','Error')
+        log('Invalid parameters to get data!', 'Error')
         return None
 
-#Function to create logs
-def log(log_message,type):
 
+# Function to create logs
+def log(log_message, type):
     current_datetime = datetime.now()
     log_message = log_message.replace('\n', ' ')
     log_line = str(type) + '\t' + str(current_datetime) + '\t' + log_message + '\n'
-    with open('./etl_logs.log','a+') as file:
+    with open('./etl_logs.log', 'a+') as file:
         file.write(log_line)
 
-#Destination Schema
+
+# Destination Schema
 def destination_schema(database):
+    if database:
 
-    try:
+        try:
 
-        #Create engine
-        connection = connect_postgresql(database,False,True)
-
-        if connection:
-        
-            # Check if the database already exists
-            check_db_query = f"SELECT 1 as found FROM pg_database WHERE datname = '{database['database']}';"
-            result = get_db_data(check_db_query,connection)
-            if result is None or len(result) == 0:
-                log(f"Destination database {database['database']} does not exist. Creating it now.",'Info')
-                create_db_query = f"CREATE DATABASE {database['database']};"
-                connection.execute(text(create_db_query))
-            else: 
-                log(f"Destination database {database['database']} exist. Moving forward.",'Info')
-
-            #Create destination db connection
-            engine = connect_postgresql(database,True,False)
-            connection = engine.connect()
+            # Globals
+            connection = False
+            engine = False
             metadata = MetaData()
 
-            #Destination Schema 
+            # Get connection according to db vendor and verify if database exist using admin db
+            if database['db_vendor'] and database['db_vendor'] == 'postgresql':
+
+                # Create engine
+                connection = connect_postgresql(database, False, True)
+                if connection:
+                    # Check if the database already exists
+                    check_db_query = f"SELECT 1 as found FROM pg_database WHERE datname = '{database['database']}';"
+                    result = get_db_data(check_db_query, connection)
+                    if result is None or len(result) == 0:
+                        log(f"Destination database {database['database']} does not exist. Creating it now.", 'Info')
+                        create_db_query = f"CREATE DATABASE {database['database']};"
+                        connection.execute(text(create_db_query))
+                    else:
+                        log(f"Destination database {database['database']} exist. Moving forward.", 'Info')
+
+                    connection.close()
+                else:
+                    log(f"Destination database not verified!", 'Error')
+                    return False
+            elif database['db_vendor'] and database['db_vendor'] == 'mssqlserver':
+
+                # Create engine
+                connection = connect_sqlserver(database, False, True)
+                if connection:
+                    # Check if the database already exists
+                    check_db_query = f"SELECT CASE WHEN EXISTS (SELECT 1 FROM sys.databases  WHERE name = '{database['database']}') THEN 1 ELSE 0 END AS found;"
+                    result = get_db_data(check_db_query, connection)
+                    if result is None or len(result) == 0 or result[0]['found'] == 0:
+                        log(f"Destination database {database['database']} does not exist. Creating it now.", 'Info')
+                        create_db_query = f"CREATE DATABASE {database['database']};"
+                        connection.execute(text(create_db_query))
+                    else:
+                        log(f"Destination database {database['database']} exist. Moving forward.", 'Info')
+
+                    connection.close()
+                else:
+                    log(f"Destination database not verified!", 'Error')
+                    return False
+            else:
+                log(f"Provide correct database vendor for destination db.", 'Error')
+                return False
+
+            # Create destination db connection
+            if database['db_vendor'] and database['db_vendor'] == 'postgresql':
+                engine = connect_postgresql(database, True, False)
+                connection = engine.connect()
+            elif database['db_vendor'] and database['db_vendor'] == 'mssqlserver':
+                engine = connect_sqlserver(database, True, False)
+                connection = engine.connect()
+            else:
+                log(f"Provide correct database vendor for destination db.", 'Error')
+                return False
+
+            # Destination Schema
             invoice = Table(
                 'invoice',
                 metadata,
@@ -522,7 +610,7 @@ def destination_schema(database):
                 Column('price_lvl_name', String),
                 Column('active', Integer)
             )
-            
+
             asn = Table(
                 'asn',
                 metadata,
@@ -605,27 +693,27 @@ def destination_schema(database):
                 Column('ord_qty', Float)
             )
 
-            #Check Tables
+            # Check Tables
             tables = metadata.create_all(engine)
 
-            log(f"Destination database verified!",'Info')
+            log(f"Destination database verified!", 'Info')
 
-            #Close Connection
+            # Close Connection
             connection.close()
 
             return engine
-        
-        else:
-
-            log(f"Destination database not verified!",'Error')   
-            return False        
-    
-    except Exception as e:
-        log(f"Error verifying destination schema : "+str(e),'Error')
-
-        #Close Connection
-        if connection:
-            connection.close()
 
 
+        except Exception as e:
+            log(f"Error verifying destination schema : " + str(e), 'Error')
+
+
+            # Close Connection
+            if connection:
+                connection.close()
+
+                return False
+
+    else:
+        log(f"Invalid parameters for checking destination schema!", 'Error')
         return False

@@ -10,12 +10,12 @@
     },
     "destination_db" : {
         "db_type" : "destination",
-        "db_vendor" : "postgresql",
-        "host" : "localhost",
-        "port" : "5432",
+        "db_vendor" : "mssqlserver",
+        "host" : "DESKTOP-D259NA7",
+        "port" : "1433",
         "database" : "etl",
-        "username" : "postgres",
-        "password" : "postgres"
+        "username" : "sa",
+        "password" : "root"
     },
     "extract" : {
         "tables" : [
