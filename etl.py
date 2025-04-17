@@ -13,7 +13,6 @@ import pandas as pd
 
 extracted_data = {}
 
-
 # Function to extract data
 def extract():
     log('Extract started!', 'Info')
@@ -76,8 +75,7 @@ def load():
 
                 try:
                     # Load table
-                    extracted_data[table['table_name']].to_sql(name=table['table_name'], con=dest_engine,
-                                                               if_exists='append', index=False)
+                    extracted_data[table['table_name']].to_sql(name=table['table_name'], con=dest_engine, if_exists='append', index=False)
 
                 except Exception as e:
 

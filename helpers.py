@@ -99,7 +99,7 @@ def connect_sqlserver(database, return_engine=False, init_db=False):
 
         # connection string
         con_str = 'mssql+pymssql://' + username + ':' + password + '@' + host + ':' + port + '/' + db_name
-        print(con_str)
+        # print(con_str)
 
         try:
 
@@ -188,6 +188,7 @@ def destination_schema(database):
                 else:
                     log(f"Destination database not verified!", 'Error')
                     return False
+
             elif database['db_vendor'] and database['db_vendor'] == 'mssqlserver':
 
                 # Create engine
@@ -207,6 +208,7 @@ def destination_schema(database):
                 else:
                     log(f"Destination database not verified!", 'Error')
                     return False
+
             else:
                 log(f"Provide correct database vendor for destination db.", 'Error')
                 return False
