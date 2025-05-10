@@ -1,93 +1,71 @@
 # Dependencies
 import json
-from helpers import connect_oracle, log, get_db_data, destination_schema
-import pandas as pd
+from helpers import connect_oracle, log, get_db_data, destination_schema, get_db_data_cx_oracle
+from sqlalchemy import text, Table as SqlAlchemyTable
 
 with open('config.json', 'r') as config_file:
     config = json.load(config_file)
 
 log('New ETL process started!', 'Process')
 
-# Function for extraction of data
-import pandas as pd
+# Function for extraction and loading of data
+def extract_and_load():
+    source_connection = None
+    dest_engine = None
 
-extracted_data = {}
+    try:
+        # Connect using cx_Oracle directly
+        source_connection = connect_oracle(config['source_db'])
+        dest_engine, tables_dict = destination_schema(config['destination_db'])
 
-# Function to extract data
-def extract():
-    log('Extract started!', 'Info')
+        if not source_connection or not dest_engine:
+            log('Connection failed', 'Error')
+            return
+        
 
-    # Connect to source database
-    source_connection = connect_oracle(config['source_db'])
+        for table_config in config['extract']['tables']:
+            table_name = table_config['table_name']
+            dest_table = tables_dict.get(table_name)
+            
+            if not isinstance(dest_table, SqlAlchemyTable):
+                log(f'Table {table_name} not defined', 'Error')
+                continue            
 
-    if source_connection:
-        for table in config['extract']['tables']:
-
+            total_rows = 0
+            query = table_config['query']
+            
             try:
-                # log('Extracting data for ' + table['table_name'],'Info')
-                data = get_db_data(
-                    str(table['query'])
-                    # +' FETCH FIRST 10 ROWS ONLY'
-                    , source_connection)
-
-                if len(data):
-                    df = pd.DataFrame(data)
-                    extracted_data[table['table_name']] = df
-                    log('Extracted ' + table['table_name'] + ' row count: ' + str(df.shape[0]), 'Info')
-                else:
-                    extracted_data[table['table_name']] = []
-                    log('No data found for ' + table['table_name'], 'Info')
-
+                # Use cx_Oracle directly for problematic queries
+                batch_generator = get_db_data_cx_oracle(query, source_connection)
+                
+                for batch in batch_generator:
+                    if not batch:
+                        continue
+                        
+                    total_rows += len(batch)
+                    try:
+                        with dest_engine.begin() as trans:
+                            trans.execute(dest_table.insert(), batch)
+                        log(f'Loaded {total_rows} rows', 'Info')
+                    except Exception as e:
+                        log(f'Batch insert failed: {str(e)}', 'Error')
+                        # Implement retry logic here if needed
+                        
+                log(f'Finished loading {total_rows} rows to {table_name}', 'Info')
+                
             except Exception as e:
-                log('Error extracting data for ' + table['table_name'] + str(e), 'Error')
+                log(f'Failed to process {table_name}: {str(e)}', 'Error')
+                if "Boolean value" in str(e):
+                    log('Solution: Simplify complex DECODE/CASE expressions in query', 'Info')
 
-        # Close the connection
-        source_connection.close()
-
-    else:
-        # Close the connection
+    except Exception as e:
+        log(f'ETL failed: {str(e)}', 'Error')
+    finally:
         if source_connection:
             source_connection.close()
+        if dest_engine:
+            dest_engine.dispose()
+        log('Connections closed', 'Info')
 
-
-# Function for transforming data
-def transform():
-    pass
-
-
-# Function for loading data
-def load():
-    log('Load started!', 'Info')
-
-    # Verify destination schema for loading
-    dest_engine = destination_schema(config['destination_db'])
-
-    if dest_engine:
-        for table in config['extract']['tables']:
-
-            # Check if table has data
-            if len(extracted_data[table['table_name']]) > 0:
-
-                log('Loading data for ' + str(table['table_name']), 'Info')
-
-                # Update headers of table to lower case
-                extracted_data[table['table_name']].columns = extracted_data[table['table_name']].columns.str.lower()
-
-                try:
-                    # Load table
-                    extracted_data[table['table_name']].to_sql(name=table['table_name'], con=dest_engine, if_exists='append', index=False)
-
-                except Exception as e:
-
-                    log('Error loading data for ' + str(table['table_name']) + str(e), 'Error')
-
-            else:
-
-                log('No data found data for ' + str(table['table_name']), 'Info')
-
-    log('Loading Completed!', 'Info')
-
-
-extract()
-transform()
-load()
+# Run the ETL process
+extract_and_load()
