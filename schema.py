@@ -426,6 +426,8 @@ asn_items = Table(
     Column('fc_cost', DECIMAL(10,3)),
     Column('tax_perc', DECIMAL(10,3)),
     Column('tax_perc2', DECIMAL(10,3)),
+    Column('tax_amt', DECIMAL(10,3)),
+    Column('tax_amt2', DECIMAL(10,3)),
     Column('ext_cost', DECIMAL(10,3)),
     Column('ext_tax_amt', DECIMAL(10,3)),
     Column('ext_tax_amt2', DECIMAL(10,3)),
