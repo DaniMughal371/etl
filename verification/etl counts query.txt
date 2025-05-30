@@ -1,0 +1,43 @@
+select 'ASN' as types,count(*) as counts from asn
+union all
+select 'ASN Items' as type_,count(*) from asn_items
+union all
+select 'Company' as type_,count(*) from company
+union all
+select 'Customer' as type_,count(*) from customer
+union all
+select 'Customer Address' as type_,count(*) from customer_address
+union all
+select 'Customer Email' as type_,count(*) from customer_email
+union all
+select 'Customer Phone' as type_,count(*) from customer_phone
+union all
+select 'DCS' as type_,count(*) from dcs
+union all
+select 'Inventory' as type_,count(*) from inventory
+union all
+select 'Inventory Price' as type_,count(*) from inventory_price
+union all
+select 'Inventory Qty' as type_,count(*) from inventory_qty
+union all
+select 'PO' as type_,count(*) from po
+union all
+select 'PO Items' as type_,count(*) from po_items
+union all
+select 'Price Level' as type_,count(*) from price_level
+union all
+select 'Slip' as type_,count(*) from slip
+union all
+select 'Slip Items' as type_,count(*) from slip_items
+union all
+select 'Store' as type_,count(*) from store
+union all
+select 'Vendor' as type_,count(*) from vendor
+union all
+select 'Voucher' as type_,count(*) from voucher
+union all
+select 'Voucher Items' as type_,count(*) from voucher_items
+union all
+select 'Invoice' as type_,count(*) from Invoice
+union all
+select 'Invoice Items' as type_,count(*) from Invoice_items;

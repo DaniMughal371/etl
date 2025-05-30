@@ -1,638 +1,105 @@
-# Dependencies
-from sqlalchemy import create_engine, text, Table, Column, Integer, String, Float, MetaData, DateTime, BIGINT
-from datetime import datetime
-from sqlalchemy.pool import NullPool
-import cx_Oracle
+import json
+import os
+import csv
+import datetime
+import traceback
+from sqlalchemy import create_engine
+from sqlalchemy.engine import Engine
+from urllib.parse import quote_plus
+from schema import metadata
 
-metadata = MetaData()
+def load_config(config_path='config.json'):
+    with open(config_path, 'r') as f:
+        config = json.load(f)
+        f.close()
+    return config
 
-# Destination Schema 
-invoice = Table(
-    'invoice',
-    metadata,
-    # Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('sid', String),
-    Column('bt_cuid', String),
-    Column('store_sid', String),
-    Column('sbs_sid', String),
-    Column('cashier_sid', String),
-    Column('ref_order_sid', String),
-    Column('ref_sale_sid', String),
-    Column('doc_no', Integer),
-    Column('receipt_type', Integer),
-    Column('invc_post_date', DateTime),
-    Column('has_sale', Integer),
-    Column('has_return', Integer),
-    Column('udf1_string', String),
-    Column('udf2_string', String),
-    Column('udf3_string', String),
-    Column('udf4_string', String),
-    Column('udf5_string', String),
-    Column('total_fee_amt', Float),
-    Column('workstation_no', Integer),
-    Column('workstation_name', String),
-    Column('pos_flag1', String),
-    Column('pos_flag2', String),
-    Column('pos_flag3', String),
-    Column('comment1', String),
-    Column('comment2', String),
-    Column('notes_general', String),
-    Column('use_vat', Integer),
-    Column('rounding_offset', Float),
-    Column('shipping_amt', Float)
-)
+def create_engine_connection(conn_params: dict) -> (Engine, str):
 
-inventory = Table(
-    'inventory',
-    metadata,
-    # Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('sid', String),
-    Column('sbs_sid', String),
-    Column('dcs_sid', String),
-    Column('vend_sid', String),
-    Column('tax_code_sid', String),
-    Column('created_datetime', DateTime),
-    Column('item_no', Integer),
-    Column('alu', String),
-    Column('description1', String),
-    Column('description2', String),
-    Column('description3', String),
-    Column('description4', String),
-    Column('attribute', String),
-    Column('item_size', String),
-    Column('udf1_string', String),
-    Column('udf2_string', String),
-    Column('udf3_string', String),
-    Column('udf4_string', String),
-    Column('udf5_string', String),
-    Column('udf6_string', String),
-    Column('udf7_string', String),
-    Column('udf8_string', String),
-    Column('udf9_string', String),
-    Column('udf10_string', String),
-    Column('udf11_string', String),
-    Column('udf12_string', String),
-    Column('udf13_string', String),
-    Column('udf14_string', String),
-    Column('udf15_string', String),
-    Column('upc', BIGINT),
-    Column('text1', String),
-    Column('text2', String),
-    Column('text3', String),
-    Column('text4', String),
-    Column('text5', String),
-    Column('text6', String),
-    Column('text7', String),
-    Column('text8', String),
-    Column('text9', String),
-    Column('text10', String),
-    Column('height', String),
-    Column('length', String),
-    Column('width', String),
-    Column('cost', Float),
-    Column('fc_cost', Float),
-    Column('vendor_list_cost', Float),
-    Column('use_qty_decimals', Integer),
-    Column('active', Integer),
-    Column('qty_per_case', Integer),
-    Column('trade_disc_perc', Float)
-)
+    required_keys = ['db_vendor', 'host', 'port', 'database', 'username', 'password']
 
-customer = Table(
-    'customer',
-    metadata,
-    # Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('sbs_sid', String),
-    Column('sid', String),
-    Column('created_datetime', DateTime),
-    Column('cust_id', BIGINT),
-    Column('first_name', String),
-    Column('last_name', String),
-    Column('gender', String),
-    Column('email', String),
-    Column('udf1_string', String),
-    Column('udf2_string', String),
-    Column('udf3_string', String),
-    Column('udf4_string', String),
-    Column('udf5_string', String),
-    Column('udf6_string', String),
-    Column('udf7_string', String),
-    Column('udf8_string', String),
-    Column('udf9_string', String),
-    Column('udf10_string', String),
-    Column('udf11_string', String),
-    Column('udf12_string', String),
-    Column('udf13_string', String),
-    Column('udf14_string', String),
-    Column('udf15_string', String),
-    Column('udf16_string', String),
-    Column('udf17_string', String),
-    Column('udf18_string', String),
-    Column('info1', String),
-    Column('info2', String),
-    Column('share_type', Integer),
-    Column('active', Integer)
-)
+    missing_keys = [k for k in required_keys if k not in conn_params or not conn_params[k]]
+    if missing_keys:
+        return None, f"Missing connection parameters: {', '.join(missing_keys)}"
 
-customer_phone = Table(
-    'customer_phone',
-    metadata,
-    # Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('cust_sid', String),
-    Column('primary_flag', Integer),
-    Column('seq_no', Integer),
-    Column('extension', String),
-    Column('phone_no', String),
-    Column('phone_allow_contact', Integer),
-    Column('created_datetime', DateTime)
-)
-
-customer_address = Table(
-    'customer_address',
-    metadata,
-    # Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('cust_sid', String),
-    Column('address_name', String),
-    Column('address_1', String),
-    Column('address_2', String),
-    Column('address_3', String),
-    Column('address_4', String),
-    Column('address_5', String),
-    Column('address_6', String),
-    Column('city', String),
-    Column('country_name', String),
-    Column('postal_code', String),
-    Column('address_allow_contact', Integer),
-    Column('primary_flag', Integer),
-    Column('active', Integer),
-    Column('seq_no', Integer),
-    Column('created_datetime', DateTime)
-)
-
-customer_email = Table(
-    'customer_email',
-    metadata,
-    # Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('cust_sid', String),
-    Column('seq_no', Integer),
-    Column('email_address', String),
-    Column('email_allow_contact', Integer),
-    Column('primary_flag', Integer),
-    Column('created_datetime', DateTime)
-)
-
-dcs = Table(
-    'dcs',
-    metadata,
-    # Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('sid', String),
-    Column('sbs_sid', String),
-    Column('dcs_code', String),
-    Column('active', Integer),
-    Column('d_name', String),
-    Column('c_name', String),
-    Column('s_name', String)
-)
-
-inventory_qty = Table(
-    'inventory_qty',
-    metadata,
-    # Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('sbs_sid', String),
-    Column('item_sid', String),
-    Column('store_sid', String),
-    Column('qty', Float)
-)
-
-inventory_price = Table(
-    'inventory_price',
-    metadata,
-    # Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('sbs_sid', String),
-    Column('item_sid', String),
-    Column('price_lvl_sid', String),
-    Column('price', Float)
-)
-
-invoice_items = Table(
-    'invoice_items',
-    metadata,
-    # Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('invc_post_date', DateTime),
-    Column('sbs_sid', String),
-    Column('doc_sid', String),
-    Column('item_sid', String),
-    Column('item_type', Integer),
-    Column('orig_price', Float),
-    Column('price', Float),
-    Column('tax_perc', Float),
-    Column('tax_amt', Float),
-    Column('tax2_perc', Float),
-    Column('tax2_amt', Float),
-    Column('cost', Float),
-    Column('sold_qty', Float),
-    Column('ext_cost', Float),
-    Column('ext_tax', Float),
-    Column('ext_tax2', Float),
-    Column('gross_sale', Float),
-    Column('gross_sale_wt', Float),
-    Column('net_sale', Float),
-    Column('net_sale_wgd', Float),
-    Column('net_sale_wt', Float),
-    Column('net_sale_wt_wgd', Float)
-)
-
-voucher = Table(
-    'voucher',
-    metadata,
-    # Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('sid', String),
-    Column('sbs_sid', String),
-    Column('store_sid', String),
-    Column('po_sid', String),
-    Column('to_sid', String),
-    Column('created_datetime', DateTime),
-    Column('arrived_date', DateTime),
-    Column('ref_vou_sid', String),
-    Column('vou_no', Integer),
-    Column('vou_type', Integer),
-    Column('use_vat', Integer),
-    Column('slip_flag', Integer)
-)
-
-voucher_items = Table(
-    'voucher_items',
-    metadata,
-    # Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('vou_sid', String),
-    Column('item_sid', String),
-    Column('item_pos', Integer),
-    Column('serial_no', String),
-    Column('lot_number', String),
-    Column('qty', Float),
-    Column('price', Float),
-    Column('cost', Float),
-    Column('fc_cost', Float),
-    Column('tax_perc', Float),
-    Column('tax_perc2', Float),
-    Column('tax_amt', Float),
-    Column('tax_amt2', Float),
-    Column('ext_cost', Float),
-    Column('ext_tax_amt', Float),
-    Column('ext_tax_amt2', Float),
-    Column('ext_price', Float),
-    Column('ext_price_wt', Float),
-    Column('ext_price_wgd', Float),
-    Column('ext_price_wt_wgd', Float)
-)
-
-slip = Table(
-    'slip',
-    metadata,
-    # Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('slip_sid', String),
-    Column('post_date', DateTime),
-    Column('out_sbs_sid', String),
-    Column('out_store_sid', String),
-    Column('in_sbs_sid', String),
-    Column('in_store_sid', String),
-    Column('ref_slip_sid', String),
-    Column('to_sid', String),
-    Column('slip_no', Integer),
-    Column('use_vat', Integer),
-    Column('tracking_no', String),
-    Column('shipment_no', String),
-    Column('days_in_tran', Integer),
-    Column('verified', Integer),
-    Column('unverified', Integer),
-    Column('archived', Integer),
-    Column('note', String),
-    Column('reversed_flag', Integer)
-)
-
-slip_items = Table(
-    'slip_items',
-    metadata,
-    # Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('slip_sid', String),
-    Column('item_sid', String),
-    Column('qty', Float),
-    Column('price', Float),
-    Column('cost', Float),
-    Column('tax_perc', Float),
-    Column('tax_amt', Float),
-    Column('ext_tax_amt', Float),
-    Column('tax_perc2', Float),
-    Column('tax_amt2', Float),
-    Column('ext_tax_amt2', Float),
-    Column('serial_no', String),
-    Column('lot_number', String),
-    Column('ext_cost', Float),
-    Column('ext_price', Float),
-    Column('ext_price_wt', Float)
-)
-
-company = Table(
-    'company',
-    metadata,
-    # Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('sid', String),
-    Column('sbs_no', Integer),
-    Column('sbs_name', String)
-)
-
-vendor = Table(
-    'vendor',
-    metadata,
-    # Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('sid', String),
-    Column('sbs_sid', String),
-    Column('vend_id', Integer),
-    Column('vend_code', String),
-    Column('active', Integer),
-    Column('vend_name', String),
-    Column('info1', String),
-    Column('info2', String),
-    Column('trade_disc_perc', Float)
-)
-
-store = Table(
-    'store',
-    metadata,
-    # Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('sbs_sid', String),
-    Column('sid', String),
-    Column('price_lvl_sid', String),
-    Column('store_no', Integer),
-    Column('store_code', String),
-    Column('store_name', String),
-    Column('active', Integer),
-    Column('activation_date', DateTime),
-    Column('address1', String),
-    Column('address2', String),
-    Column('address3', String),
-    Column('address4', String),
-    Column('address5', String),
-    Column('address6', String),
-    Column('zip', String),
-    Column('phone1', String),
-    Column('phone2', String),
-    Column('udf1_string', String),
-    Column('udf2_string', String),
-    Column('udf3_string', String),
-    Column('udf4_string', String),
-    Column('udf5_string', String)
-)
-
-price_level = Table(
-    'price_level',
-    metadata,
-    # Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('sbs_sid', String),
-    Column('sid', String),
-    Column('price_lvl', Integer),
-    Column('price_lvl_name', String),
-    Column('active', Integer)
-)
-
-asn = Table(
-    'asn',
-    metadata,
-    # Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('sid', String),
-    Column('sbs_sid', String),
-    Column('store_sid', String),
-    Column('po_sid', String),
-    Column('to_sid', String),
-    Column('created_datetime', DateTime),
-    Column('arrived_date', DateTime),
-    Column('ref_vou_sid', String),
-    Column('vou_no', Integer),
-    Column('vou_type', Integer),
-    Column('use_vat', Integer),
-    Column('slip_flag', Integer)
-)
-
-asn_items = Table(
-    'asn_items',
-    metadata,
-    # Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('vou_sid', String),
-    Column('item_sid', String),
-    Column('item_pos', Integer),
-    Column('serial_no', String),
-    Column('lot_number', String),
-    Column('qty', Float),
-    Column('price', Float),
-    Column('cost', Float),
-    Column('fc_cost', Float),
-    Column('tax_perc', Float),
-    Column('tax_perc2', Float),
-    Column('ext_cost', Float),
-    Column('ext_tax_amt', Float),
-    Column('ext_tax_amt2', Float),
-    Column('ext_price', Float),
-    Column('ext_price_wt', Float),
-    Column('ext_price_wgd', Float),
-    Column('ext_price_wt_wgd', Float)
-)
-
-po = Table(
-    'po',
-    metadata,
-    # Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('sbs_sid', String),
-    Column('store_sid', String),
-    Column('sid', String),
-    Column('so_sid', String),
-    Column('ref_po_sid', String),
-    Column('po_no', String),
-    Column('po_type', Integer),
-    Column('vend_sid', String),
-    Column('disc_amt', Float),
-    Column('disc_perc', Float),
-    Column('status', Integer),
-    Column('from_so', Integer),
-    Column('use_vat', Integer),
-    Column('verified', Integer),
-    Column('unverified', Integer),
-    Column('created_datetime', DateTime),
-    Column('shipping_date', DateTime),
-    Column('cms_post_date', DateTime)
-)
-
-po_items = Table(
-    'po_items',
-    metadata,
-    # Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('po_sid', String),
-    Column('item_sid', String),
-    Column('item_pos', Integer),
-    Column('created_datetime', DateTime),
-    Column('price', Float),
-    Column('cost', Float),
-    Column('fc_cost', Float),
-    Column('tax_perc', Float),
-    Column('tax_perc2', Float),
-    Column('ord_qty', Float)
-)
-
-tables_dict = {
-    'invoice_items': invoice_items,
-    'invoice': invoice, 
-    'inventory': inventory, 
-    'customer': customer, 
-    'customer_phone': customer_phone, 
-    'customer_address': customer_address, 
-    'customer_email': customer_email, 
-    'dcs': dcs, 
-    'inventory_qty': inventory_qty, 
-    'inventory_price': inventory_price, 
-    'voucher': voucher, 
-    'voucher_items': voucher_items, 
-    'slip': slip, 
-    'slip_items': slip_items, 
-    'company': company, 
-    'vendor': vendor, 
-    'store': store, 
-    'price_level': price_level, 
-    'asn': asn, 
-    'asn_items': asn_items, 
-    'po': po, 
-    'po_items': po_items
-}
-
-
-# Function to connect Oracle
-def connect_oracle(database):
-    try:
-        dsn = cx_Oracle.makedsn(
-            database['host'],
-            database['port'],
-            service_name=database['database']
-        )
-        connection = cx_Oracle.connect(
-            user=database['username'],
-            password=database['password'],
-            dsn=dsn,
-            encoding="UTF-8"
-        )
-        log('Oracle connection established', 'Info')
-        return connection
-    except Exception as e:
-        log(f'Oracle connection failed: {str(e)}', 'Error')
-        return None
-    
-# Function to connect SQL Server
-def connect_sqlserver(database, return_engine=False, init_db=False):
-    username = database['username'] if 'username' in database else None
-    password = database['password'] if 'password' in database else None
-    host = database['host'] if 'host' in database else None
-    port = database['port'] if 'port' in database else None
-    db_name = 'master' if init_db else (database['database'] if 'database' in database else None)
-    db_type = database['db_type'] if 'db_type' in database else None
-
-    if username and password and host and port and db_name and db_type:
-        con_str = 'mssql+pymssql://' + username + ':' + password + '@' + host + ':' + port + '/' + db_name
-        try:
-            engine_con = create_engine(con_str, isolation_level="AUTOCOMMIT" if init_db else None)
-            if return_engine:
-                return engine_con
-            else:
-                connection = engine_con.connect()
-                log('Connected to ' + db_type + ' DB', 'Info')
-                return connection
-        except Exception as e:
-            log('Unable to connect to ' + db_type + ' DB: ' + str(e), 'Error')
-            return None
-    else:
-        log('Missing connection parameters!', 'Error')
-        return None
-
-# Function to get data from db
-def get_db_data(query, connection):
-    """Improved version with streaming and better error handling"""
-    if not query or not connection:
-        log('Invalid parameters to get data!', 'Error')
-        return None
+    db_vendor = conn_params['db_vendor'].lower()
 
     try:
-        key_data = []
-        result = connection.execution_options(
-            stream_results=True,
-            max_row_buffer=10000
-        ).execute(text(query))
-        
-        column_names = [desc[0].lower() for desc in result.cursor.description]
-        
-        while True:
-            chunk = result.fetchmany(10000)
-            if not chunk:
-                break
-            for row in chunk:
-                key_data.append(dict(zip(column_names, row)))
-        
-        return key_data
-    except Exception as e:
-        log(f'Query execution failed: {str(e)}\nQuery: {query[:200]}...', 'Error')
-        return None
+        if db_vendor == 'oracle':
+            user = quote_plus(conn_params['username'])
+            password = quote_plus(conn_params['password'])
+            host = conn_params['host']
+            port = conn_params['port']
+            service_name = conn_params['database']
+            connect_str = f"oracle+cx_oracle://{user}:{password}@{host}:{port}/?service_name={service_name}"
+            engine = create_engine(connect_str)
+            with engine.connect() as conn:
+                pass
+            return engine, None
 
-def get_db_data_cx_oracle(query, connection):
-    """Alternative implementation using cx_Oracle directly"""
-    try:
-        cursor = connection.cursor()
-        cursor.execute(query)
-        
-        columns = [col[0].lower() for col in cursor.description]
-        while True:
-            rows = cursor.fetchmany(10000)
-            if not rows:
-                break
-            yield [dict(zip(columns, row)) for row in rows]
-            
-    except Exception as e:
-        log(f'Query execution failed: {str(e)}', 'Error')
-        raise
-    finally:
-        cursor.close()
+        elif db_vendor == 'mssqlserver':
+            user = quote_plus(conn_params['username'])
+            password = quote_plus(conn_params['password'])
+            host = conn_params['host']
+            port = conn_params['port']
+            database = conn_params['database']
+            driver = "ODBC Driver 17 for SQL Server"
+            driver_enc = quote_plus(driver)
+            connect_str = f"mssql+pyodbc://{user}:{password}@{host}:{port}/{database}?driver={driver_enc}"
+            engine = create_engine(connect_str)
+            with engine.connect() as conn:
+                pass
+            return engine, None
 
-# Function to create logs
-def log(log_message, type):
-    current_datetime = datetime.now()
-    log_message = log_message.replace('\n', ' ')
-    log_line = str(type) + '\t' + str(current_datetime) + '\t' + log_message + '\n'
-    with open('./etl_logs.log', 'a+') as file:
-        file.write(log_line)
-
-# Destination Schema verification
-def destination_schema(database):
-    """Updated to return both engine and tables dictionary"""
-    if not database:
-        log('Invalid database configuration', 'Error')
-        return None, None
-
-    engine = None
-    connection = None
-    
-    try:
-        # Database connection logic (SQL Server in this case)
-        if database['db_vendor'] == 'mssqlserver':
-            engine = connect_sqlserver(database, return_engine=True)
-            if engine:
-                connection = engine.connect()
-                # Verify/Create tables
-                metadata.create_all(engine)
-                log('Destination schema verified', 'Info')
-                return engine, tables_dict
         else:
-            log('Unsupported database vendor', 'Error')
-            return None, None
-            
+            return None, f"Unsupported db_vendor: {conn_params['db_vendor']}"
+
     except Exception as e:
-        log(f'Destination schema verification failed: {str(e)}', 'Error')
-        if connection:
-            connection.close()
-        if engine:
-            engine.dispose()
-        return None, None
-    
+        return None, f"Error creating engine or connecting: {str(e)}"
+
+def write_log(log_type, table_name, status, message):
+
+    log_dir = 'logs'
+
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    logfile = os.path.join(log_dir, f"{log_type}.log")
+
+    file_exists = os.path.isfile(logfile)
+
+    with open(logfile, mode='a', newline='', encoding='utf-8') as f:
+
+        fieldnames = ['timestamp', 'table_name', 'status', 'message']
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        if not file_exists:
+            writer.writeheader()
+        writer.writerow({
+            'timestamp': datetime.datetime.now().isoformat(),
+            'table_name': table_name,
+            'status': status,
+            'message': message
+        })
+
+        f.close()
+
+def log_exception(log_type, table_name, e):
+    err_msg = f"{str(e)}. Traceback: {traceback.format_exc()}"
+    write_log(log_type, table_name, 'ERROR', err_msg)
+
+def update_schema(staging_engine,live_engine):
+    """
+    Synchronize schema in live and staging ETL databases using metadata from schema.py.
+    """
+    # Create or update schema in both DBs
+    try:
+        metadata.create_all(staging_engine)
+        write_log('schema', 'DEST_STAGING_DB', 'SUCCESS', 'Schema updated successfully in staging database.')
+        metadata.create_all(live_engine)
+        write_log('schema', 'DEST_LIVE_DB', 'SUCCESS', 'Schema updated successfully in live database.')
+
+        return True
+
+    except Exception as e:
+        log_exception('schema', 'SCHEMA_UPDATE', e)
+        return False
+
