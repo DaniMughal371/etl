@@ -6,7 +6,7 @@ metadata = MetaData()
 invoice = Table(
     'invoice',
     metadata,
-    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    # Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('sid', String),
     Column('bt_cuid', String),
     Column('store_sid', String),
@@ -41,7 +41,7 @@ invoice = Table(
 inventory = Table(
     'inventory',
     metadata,
-    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    # Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('sid', String),
     Column('sbs_sid', String),
     Column('dcs_sid', String),
@@ -97,7 +97,7 @@ inventory = Table(
 customer = Table(
     'customer',
     metadata,
-    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    # Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('sbs_sid', String),
     Column('sid', String),
     Column('created_datetime', DateTime),
@@ -133,7 +133,7 @@ customer = Table(
 customer_phone = Table(
     'customer_phone',
     metadata,
-    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    # Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('cust_sid', String),
     Column('primary_flag', Integer),
     Column('seq_no', Integer),
@@ -146,7 +146,7 @@ customer_phone = Table(
 customer_address = Table(
     'customer_address',
     metadata,
-    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    # Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('cust_sid', String),
     Column('address_name', String),
     Column('address_1', String),
@@ -168,7 +168,7 @@ customer_address = Table(
 customer_email = Table(
     'customer_email',
     metadata,
-    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    # Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('cust_sid', String),
     Column('seq_no', Integer),
     Column('email_address', String),
@@ -180,7 +180,7 @@ customer_email = Table(
 dcs = Table(
     'dcs',
     metadata,
-    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    # Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('sid', String),
     Column('sbs_sid', String),
     Column('dcs_code', String),
@@ -193,7 +193,7 @@ dcs = Table(
 inventory_qty = Table(
     'inventory_qty',
     metadata,
-    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    # Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('sbs_sid', String),
     Column('item_sid', String),
     Column('store_sid', String),
@@ -203,7 +203,7 @@ inventory_qty = Table(
 inventory_price = Table(
     'inventory_price',
     metadata,
-    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    # Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('sbs_sid', String),
     Column('item_sid', String),
     Column('price_lvl_sid', String),
@@ -213,7 +213,7 @@ inventory_price = Table(
 invoice_items = Table(
     'invoice_items',
     metadata,
-    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    # Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('invc_post_date', DateTime),
     Column('sbs_sid', String),
     Column('doc_sid', String),
@@ -242,7 +242,7 @@ invoice_items = Table(
 voucher = Table(
     'voucher',
     metadata,
-    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    # Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('sid', String),
     Column('sbs_sid', String),
     Column('store_sid', String),
@@ -260,7 +260,7 @@ voucher = Table(
 voucher_items = Table(
     'voucher_items',
     metadata,
-    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    # Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('vou_sid', String),
     Column('item_sid', String),
     Column('item_pos', Integer),
@@ -286,7 +286,7 @@ voucher_items = Table(
 slip = Table(
     'slip',
     metadata,
-    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    # Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('sid', String),
     Column('post_date', DateTime),
     Column('out_sbs_sid', String),
@@ -310,7 +310,7 @@ slip = Table(
 slip_items = Table(
     'slip_items',
     metadata,
-    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    # # Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('slip_sid', String),
     Column('item_sid', String),
     Column('item_pos', Integer),
@@ -333,7 +333,7 @@ slip_items = Table(
 company = Table(
     'company',
     metadata,
-    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    # Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('sid', String),
     Column('sbs_no', Integer),
     Column('sbs_name', String)
@@ -342,7 +342,7 @@ company = Table(
 vendor = Table(
     'vendor',
     metadata,
-    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    # Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('sid', String),
     Column('sbs_sid', String),
     Column('vend_id', Integer),
@@ -357,7 +357,7 @@ vendor = Table(
 store = Table(
     'store',
     metadata,
-    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    # Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('sbs_sid', String),
     Column('sid', String),
     Column('price_lvl_sid', String),
@@ -385,7 +385,7 @@ store = Table(
 price_level = Table(
     'price_level',
     metadata,
-    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    # Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('sbs_sid', String),
     Column('sid', String),
     Column('price_lvl', Integer),
@@ -396,7 +396,7 @@ price_level = Table(
 asn = Table(
     'asn',
     metadata,
-    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    # Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('sid', String),
     Column('sbs_sid', String),
     Column('store_sid', String),
@@ -414,7 +414,7 @@ asn = Table(
 asn_items = Table(
     'asn_items',
     metadata,
-    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    # Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('vou_sid', String),
     Column('item_sid', String),
     Column('item_pos', Integer),
@@ -440,7 +440,7 @@ asn_items = Table(
 po = Table(
     'po',
     metadata,
-    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    # Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('sbs_sid', String),
     Column('store_sid', String),
     Column('sid', String),
@@ -464,7 +464,7 @@ po = Table(
 po_items = Table(
     'po_items',
     metadata,
-    Column('id', BIGINT, primary_key=True, autoincrement=True),
+    # Column('id', BIGINT, primary_key=True, autoincrement=True),
     Column('po_sid', String),
     Column('item_sid', String),
     Column('item_pos', Integer),
