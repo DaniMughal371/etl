@@ -1,4 +1,5 @@
 import os
+import csv
 import pandas as pd
 from sqlalchemy import text
 from datetime import datetime
@@ -47,12 +48,13 @@ def extract(tables_cfg,source_engine):
 
             csv_path = os.path.join(extract_folder, f"{table_name}.csv")
             full_csv_path = os.path.abspath(csv_path)
-            df.to_csv(csv_path, index=False)
+            df.to_csv(csv_path, index=False, quoting=csv.QUOTE_ALL, quotechar='"', encoding='utf-8')
 
             dataframes[table_name] = {
                 'csv_path': csv_path,
                 'full_csv_path': full_csv_path,
-                'unique_keys': unique_keys
+                'unique_keys': unique_keys,
+                'incremental': incremental
             }
 
             write_log('extract', table_name, 'SUCCESS', f"Extracted data for {table_name}, Rows:{len(df)}, Path:{csv_path}")
@@ -128,6 +130,8 @@ def transform(dataframes):
         # Clean string columns: strip whitespace and replace NaN with None
         for col in string_cols:
             cleaned_df[col] = cleaned_df[col].astype(str).str.strip()
+            # Replace commas with spaces
+            cleaned_df[col] = cleaned_df[col].str.replace(',', ' ', regex=False)
             # Replace "nan" strings with pd.NA
             cleaned_df[col] = cleaned_df[col].replace({'nan': pd.NA, 'None': pd.NA})
 
@@ -171,6 +175,7 @@ def load(dataframes,stag_db_engine,live_db_engine):
             unique_keys = info.get('unique_keys',[])
             unique_keys = [key.lower() for key in unique_keys]
             full_csv_path = info.get('cleaned_full_csv_path')
+            incremental = info.get('incremental')
 
             table = tables_dict[table_name]
             columns = [col.name for col in table.columns if col.name != 'id']
@@ -178,26 +183,26 @@ def load(dataframes,stag_db_engine,live_db_engine):
 
             write_log('load', table_name, 'INFO', f"Loading data for {table_name}")
 
-            with stag_db_engine.begin() as connection:
-                connection.execute(text(f"TRUNCATE TABLE {table_name}"))
-                connection.execute(text(f"""
-                    BULK INSERT {table_name}
-                    FROM '{full_csv_path.replace("'", "''")}'
-                    WITH (
-                        FORMAT = 'CSV',
-                        FIRSTROW = 2,
-                        FIELDQUOTE = '"',
-                        FIELDTERMINATOR = ',',
-                        ROWTERMINATOR = '0x0a'
-                    )
-                """))
+            if incremental:
 
-            write_log('load', table_name, 'SUCCESS', f"Loaded data into {table_name}")
+                with stag_db_engine.begin() as connection:
+                    connection.execute(text(f"TRUNCATE TABLE {table_name}"))
 
-            write_log('load', table_name, 'INFO', f"Merging data for {table_name}")
-            # Update Live DB
-            with live_db_engine.begin() as connection:
-                connection.execute(text(
+                    connection.execute(text(f"""
+                        BULK INSERT {table_name}
+                        FROM '{full_csv_path.replace("'", "''")}'
+                        WITH (
+                            FORMAT = 'CSV',
+                            FIRSTROW = 2,
+                            FIELDQUOTE = '"',
+                            FIELDTERMINATOR = ',',
+                            ROWTERMINATOR = '0x0a'
+                        )
+                    """))
+
+                    write_log('load', table_name, 'INFO', f"Merging data for {table_name}")
+
+                    connection.execute(text(
                     f"""
                         MERGE INTO etl.dbo.{table_name} AS TARGET
                         USING (
@@ -215,8 +220,25 @@ def load(dataframes,stag_db_engine,live_db_engine):
                             VALUES({', '.join([f'SOURCE.{key}' for key in columns])});
                     """
                 ))
+                    
+                    write_log('load', table_name, 'SUCCESS', f"Merged data into {table_name}")
+            else:
 
-            write_log('load', table_name, 'SUCCESS', f"Merged data into {table_name}")
+                with live_db_engine.begin() as connection:
+                    connection.execute(text(f"TRUNCATE TABLE {table_name}"))
+                    connection.execute(text(f"""
+                        BULK INSERT {table_name}
+                        FROM '{full_csv_path.replace("'", "''")}'
+                        WITH (
+                            FORMAT = 'CSV',
+                            FIRSTROW = 2,
+                            FIELDQUOTE = '"',
+                            FIELDTERMINATOR = ',',
+                            ROWTERMINATOR = '0x0a'
+                        )
+                    """))
+
+            write_log('load', table_name, 'SUCCESS', f"Loaded data into {table_name}")
 
         except Exception as e:
             write_log('load', table_name, 'ERROR', f"Table:{table_name}, Failed to load data: {str(e)}")
