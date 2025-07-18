@@ -24,9 +24,11 @@ def extract(tables_cfg,source_engine):
 
         table_name = table.get('table_name', 'unknown')
         incremental = table.get('incremental', 0)
+        incremental_days = table.get('incremental_days', 0)
         unique_keys = table.get('unique_keys', '')
         query = table.get('query', '')
         incremental_query = table.get('incremental_query', '')
+        incremental_date_column = table.get('incremental_date_column', '')
         
         if not query or not incremental_query:
             write_log('extract', table_name, 'ERROR', 'No query specified in config')
@@ -54,7 +56,9 @@ def extract(tables_cfg,source_engine):
                 'csv_path': csv_path,
                 'full_csv_path': full_csv_path,
                 'unique_keys': unique_keys,
-                'incremental': incremental
+                'incremental': incremental,
+                'incremental_days': incremental_days,
+                'incremental_date_column': incremental_date_column
             }
 
             write_log('extract', table_name, 'SUCCESS', f"Extracted data for {table_name}, Rows:{len(df)}, Path:{csv_path}")
@@ -175,7 +179,9 @@ def load(dataframes,stag_db_engine,live_db_engine):
             unique_keys = info.get('unique_keys',[])
             unique_keys = [key.lower() for key in unique_keys]
             full_csv_path = info.get('cleaned_full_csv_path')
-            incremental = info.get('incremental')
+            incremental = info.get('incremental',0)
+            incremental_days = info.get('incremental_days',0)
+            incremental_date_column = info.get('incremental_date_column','')
 
             table = tables_dict[table_name]
             columns = [col.name for col in table.columns if col.name != 'id']
@@ -185,8 +191,46 @@ def load(dataframes,stag_db_engine,live_db_engine):
 
             if incremental:
 
-                with stag_db_engine.begin() as connection:
-                    connection.execute(text(f"TRUNCATE TABLE {table_name}"))
+                # with stag_db_engine.begin() as connection:
+                #     connection.execute(text(f"TRUNCATE TABLE {table_name}"))
+
+                #     connection.execute(text(f"""
+                #         BULK INSERT {table_name}
+                #         FROM '{full_csv_path.replace("'", "''")}'
+                #         WITH (
+                #             FORMAT = 'CSV',
+                #             FIRSTROW = 2,
+                #             FIELDQUOTE = '"',
+                #             FIELDTERMINATOR = ',',
+                #             ROWTERMINATOR = '0x0a'
+                #         )
+                #     """))
+
+                #     write_log('load', table_name, 'INFO', f"Merging data for {table_name}")
+
+                #     connection.execute(text(
+                #     f"""
+                #         MERGE INTO etl.dbo.{table_name} AS TARGET
+                #         USING (
+                #             SELECT {', '.join(columns)}
+                #             FROM etl_stagging.dbo.{table_name}
+                #             EXCEPT 
+                #             SELECT {', '.join(columns)}
+                #             FROM etl.dbo.{table_name}
+                #         ) AS SOURCE
+                #         ON {' AND '.join([f'TARGET.{key} = SOURCE.{key}' for key in unique_keys])}
+                #         WHEN MATCHED THEN
+                #             UPDATE SET {', '.join([f'TARGET.{key} = SOURCE.{key}' for key in columns_without_keys])}
+                #         WHEN NOT MATCHED THEN 
+                #             INSERT ({', '.join(columns)})
+                #             VALUES({', '.join([f'SOURCE.{key}' for key in columns])});
+                #     """
+                # ))
+                    
+                #     write_log('load', table_name, 'SUCCESS', f"Merged data into {table_name}")
+
+                with live_db_engine.begin() as connection:
+                    connection.execute(text(f"DELETE FROM {table_name} WHERE {incremental_date_column} >= cast(getdate() -{incremental_days} as date)"))
 
                     connection.execute(text(f"""
                         BULK INSERT {table_name}
@@ -198,30 +242,8 @@ def load(dataframes,stag_db_engine,live_db_engine):
                             FIELDTERMINATOR = ',',
                             ROWTERMINATOR = '0x0a'
                         )
-                    """))
+                    """))                   
 
-                    write_log('load', table_name, 'INFO', f"Merging data for {table_name}")
-
-                    connection.execute(text(
-                    f"""
-                        MERGE INTO etl.dbo.{table_name} AS TARGET
-                        USING (
-                            SELECT {', '.join(columns)}
-                            FROM etl_stagging.dbo.{table_name}
-                            EXCEPT 
-                            SELECT {', '.join(columns)}
-                            FROM etl.dbo.{table_name}
-                        ) AS SOURCE
-                        ON {' AND '.join([f'TARGET.{key} = SOURCE.{key}' for key in unique_keys])}
-                        WHEN MATCHED THEN
-                            UPDATE SET {', '.join([f'TARGET.{key} = SOURCE.{key}' for key in columns_without_keys])}
-                        WHEN NOT MATCHED THEN 
-                            INSERT ({', '.join(columns)})
-                            VALUES({', '.join([f'SOURCE.{key}' for key in columns])});
-                    """
-                ))
-                    
-                    write_log('load', table_name, 'SUCCESS', f"Merged data into {table_name}")
             else:
 
                 with live_db_engine.begin() as connection:

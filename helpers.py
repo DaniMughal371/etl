@@ -102,4 +102,3 @@ def update_schema(staging_engine,live_engine):
     except Exception as e:
         log_exception('schema', 'SCHEMA_UPDATE', e)
         return False
-

@@ -2,7 +2,7 @@
     "source_db" : {
         "db_type" : "source",
         "db_vendor" : "oracle",
-        "host" : "173.249.57.206",
+        "host" : "10.31.12.11",
         "port" : "1521",
         "database" : "rproods",
         "username" : "reportuser",
@@ -11,10 +11,10 @@
     "destination_db" : {
         "db_type" : "destination",
         "db_vendor" : "mssqlserver",
-        "host" : "BISYSTEM",
+        "host" : "RETAILTEST",
         "port" : "1433",
         "username" : "sa",
-        "password" : "root",
+        "password" : "123456",
         "live_db" : "etl",
         "stagging_db": "etl_staging"
     },
