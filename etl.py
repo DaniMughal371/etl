@@ -191,46 +191,8 @@ def load(dataframes,stag_db_engine,live_db_engine):
 
             if incremental:
 
-                # with stag_db_engine.begin() as connection:
-                #     connection.execute(text(f"TRUNCATE TABLE {table_name}"))
-
-                #     connection.execute(text(f"""
-                #         BULK INSERT {table_name}
-                #         FROM '{full_csv_path.replace("'", "''")}'
-                #         WITH (
-                #             FORMAT = 'CSV',
-                #             FIRSTROW = 2,
-                #             FIELDQUOTE = '"',
-                #             FIELDTERMINATOR = ',',
-                #             ROWTERMINATOR = '0x0a'
-                #         )
-                #     """))
-
-                #     write_log('load', table_name, 'INFO', f"Merging data for {table_name}")
-
-                #     connection.execute(text(
-                #     f"""
-                #         MERGE INTO etl.dbo.{table_name} AS TARGET
-                #         USING (
-                #             SELECT {', '.join(columns)}
-                #             FROM etl_stagging.dbo.{table_name}
-                #             EXCEPT 
-                #             SELECT {', '.join(columns)}
-                #             FROM etl.dbo.{table_name}
-                #         ) AS SOURCE
-                #         ON {' AND '.join([f'TARGET.{key} = SOURCE.{key}' for key in unique_keys])}
-                #         WHEN MATCHED THEN
-                #             UPDATE SET {', '.join([f'TARGET.{key} = SOURCE.{key}' for key in columns_without_keys])}
-                #         WHEN NOT MATCHED THEN 
-                #             INSERT ({', '.join(columns)})
-                #             VALUES({', '.join([f'SOURCE.{key}' for key in columns])});
-                #     """
-                # ))
-                    
-                #     write_log('load', table_name, 'SUCCESS', f"Merged data into {table_name}")
-
-                with live_db_engine.begin() as connection:
-                    connection.execute(text(f"DELETE FROM {table_name} WHERE {incremental_date_column} >= cast(getdate() -{incremental_days} as date)"))
+                with stag_db_engine.begin() as connection:
+                    connection.execute(text(f"TRUNCATE TABLE {table_name}"))
 
                     connection.execute(text(f"""
                         BULK INSERT {table_name}
@@ -242,7 +204,39 @@ def load(dataframes,stag_db_engine,live_db_engine):
                             FIELDTERMINATOR = ',',
                             ROWTERMINATOR = '0x0a'
                         )
-                    """))                   
+                    """))
+
+                    write_log('load', table_name, 'INFO', f"Merging data for {table_name}")
+
+                    connection.execute(text(
+                    f"""
+                        MERGE INTO etl.dbo.{table_name} AS TARGET
+                        USING etl_staging.dbo.{table_name} AS SOURCE
+                        ON {' AND '.join([f'TARGET.{key} = SOURCE.{key}' for key in unique_keys])}
+                        WHEN MATCHED THEN
+                            UPDATE SET {', '.join([f'TARGET.{key} = SOURCE.{key}' for key in columns_without_keys])}
+                        WHEN NOT MATCHED THEN 
+                            INSERT ({', '.join(columns)})
+                            VALUES({', '.join([f'SOURCE.{key}' for key in columns])});
+                    """
+                    ))
+                    
+                    write_log('load', table_name, 'SUCCESS', f"Merged data into {table_name}")
+
+                # with live_db_engine.begin() as connection:
+                #     connection.execute(text(f"DELETE FROM {table_name} WHERE {incremental_date_column} >= cast(getdate() -{incremental_days} as date)"))
+
+                #     connection.execute(text(f"""
+                #         BULK INSERT {table_name}
+                #         FROM '{full_csv_path.replace("'", "''")}'
+                #         WITH (
+                #             FORMAT = 'CSV',
+                #             FIRSTROW = 2,
+                #             FIELDQUOTE = '"',
+                #             FIELDTERMINATOR = ',',
+                #             ROWTERMINATOR = '0x0a'
+                #         )
+                #     """))                   
 
             else:
 
@@ -260,7 +254,7 @@ def load(dataframes,stag_db_engine,live_db_engine):
                         )
                     """))
 
-            write_log('load', table_name, 'SUCCESS', f"Loaded data into {table_name}")
+                write_log('load', table_name, 'SUCCESS', f"Loaded data into {table_name}")
 
         except Exception as e:
             write_log('load', table_name, 'ERROR', f"Table:{table_name}, Failed to load data: {str(e)}")

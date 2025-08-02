@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import csv
 import datetime
 import traceback
@@ -9,9 +10,16 @@ from urllib.parse import quote_plus
 from schema import metadata
 
 def load_config(config_path='config.json'):
-    with open(config_path, 'r') as f:
+    # Determine base path depending on how the app is run
+    if getattr(sys, 'frozen', False):
+        base_path = sys._MEIPASS  # PyInstaller temp unpack dir
+    else:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+
+    full_path = os.path.join(base_path, config_path)
+
+    with open(full_path, 'r') as f:
         config = json.load(f)
-        f.close()
     return config
 
 def create_engine_connection(conn_params: dict) -> (Engine, str):
